@@ -1,0 +1,13 @@
+
+      {sidebar ? <div className={styles.sidebar}>
+        <ul>
+          <li onClick={() => setTab("rocketgraphs")} className={tab == "rocketgraphs" ? styles.selected : null}>Rocket</li>
+          <li onClick={() => setTab("cansatgraphs")} className={tab == "cansatgraphs" ? styles.selected : null}>Cansat</li>
+          <li onClick={() => setTab("flight")} className={tab == "flight" ? styles.selected : null}>Flight</li>
+          <li onClick={() => setTab("terminal")} className={tab == "terminal" ? styles.selected : null}>Terminal</li>
+        </ul>
+      </div> : null}
+
+      <div className={styles.main}>
+        
+      </div>
