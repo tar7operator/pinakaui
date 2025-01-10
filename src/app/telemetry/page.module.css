@@ -436,6 +436,7 @@ div.base {
   padding: 2px;
   align-items: center;
   overflow-x: scroll;
+  word-wrap: normal;
 
 }
 .welcomeMsg {

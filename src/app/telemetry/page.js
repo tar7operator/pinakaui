@@ -1,10 +1,24 @@
 "use client"
-import Image from "next/image";
 import "leaflet/dist/leaflet.css"
 import Graph from "./components/Graph";
 import Map from "./components/Map";
 import styles from "./page.module.css";
 import { useState, useEffect, useRef } from "react";
+
+// Function to parse CSV data into JSON
+const parseCSV = (csv) => {
+  const rows = csv.split("\n");
+  const headers = rows[0].split(",");
+
+  return rows.slice(1).map(row => {
+    const values = row.split(",");
+    const json = {};
+    headers.forEach((header, index) => {
+      json[header.trim()] = values[index]?.trim();
+    });
+    return json;
+  });
+};
 
 export default function Home() {
 
@@ -14,8 +28,9 @@ export default function Home() {
   const [sats, getSats] = useState(5);
   const [data, setData] = useState([]);
   const [connection, changeConnection] = useState({ status: false, message: "Telemetry not found." });
+
   const [terminal, setTerminal] = useState([
-    { datetime: new Date('2024-12-27 00:00:00').toISOString(), type: 'com', message: 'Hello, world!' }
+    { datetime: new Date('2024-12-27 00:00:00').toISOString(), type: 'com', message: 'Welcome!' },
   ]);
   const [dummy, setDummy] = useState(true);
   const terminalEndRef = useRef(null);
@@ -33,86 +48,26 @@ export default function Home() {
       "My": 24.00,
       "Mz": 9.81,
       "Altitude": 40.00
-    },
-    {
-      "t": 12200594,
-      "Ax": 30.00,
-      "Ay": 13.98,
-      "Az": 9.81,
-      "Rx": 30.00,
-      "Ry": 13.98,
-      "Rz": 9.81,
-      "Mx": 30.00,
-      "My": 13.98,
-      "Mz": 9.81,
-      "Altitude": 30.00
-    },
-    {
-      "t": 12200595,
-      "Ax": 20.00,
-      "Ay": 98.00,
-      "Az": 9.81,
-      "Rx": 20.00,
-      "Ry": 98.00,
-      "Rz": 9.81,
-      "Mx": 20.00,
-      "My": 98.00,
-      "Mz": 9.81,
-      "Altitude": 20.00
-    },
-    {
-      "t": 12200596,
-      "Ax": 27.80,
-      "Ay": 39.08,
-      "Az": 9.81,
-      "Rx": 27.80,
-      "Ry": 39.08,
-      "Rz": 9.81,
-      "Mx": 27.80,
-      "My": 39.08,
-      "Mz": 9.81,
-      "Altitude": 27.80
-    },
-    {
-      "t": 12200597,
-      "Ax": 18.90,
-      "Ay": 48.00,
-      "Az": 9.81,
-      "Rx": 18.90,
-      "Ry": 48.00,
-      "Rz": 9.81,
-      "Mx": 18.90,
-      "My": 48.00,
-      "Mz": 9.81,
-      "Altitude": 18.90
-    },
-    {
-      "t": 12200598,
-      "Ax": 23.90,
-      "Ay": 38.00,
-      "Az": 9.81,
-      "Rx": 23.90,
-      "Ry": 38.00,
-      "Rz": 9.81,
-      "Mx": 23.90,
-      "My": 38.00,
-      "Mz": 9.81,
-      "Altitude": 23.90
-    },
-    {
-      "t": 12200599,
-      "Ax": 34.90,
-      "Ay": 43.00,
-      "Az": 9.81,
-      "Rx": 34.90,
-      "Ry": 43.00,
-      "Rz": 9.81,
-      "Mx": 34.90,
-      "My": 43.00,
-      "Mz": 9.81,
-      "Altitude": 34.9
     }
   ];
+
+  const fetchAndTransformData = async () => {
+    try {
+      const response = await fetch('/data.csv'); // Fetch CSV from public folder
+      if (!response.ok) {
+        throw new Error(`Failed to fetch CSV: ${response.statusText}`);
+      }
+
+      const csvData = await response.text();
+      const parsedData = parseCSV(csvData); // Parse CSV into JSON
+
+      setData(parsedData);
+
+
+    } catch (error) {
+      console.error("Error fetching or parsing CSV:", error);
+    }
+  };
 
   useEffect(() => {
 
@@ -124,8 +79,14 @@ export default function Home() {
       }));
     }, 1000);
     terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    return () => clearInterval(intervalId);
 
+    fetchAndTransformData(); // Initial fetch
+    const interval = setInterval(fetchAndTransformData, 250); // Set interval to fetch every second
+
+    return () => {
+      clearInterval(intervalId);
+      clearInterval(interval);
+    };
   }, [terminal]);
 
   return (
@@ -197,22 +158,22 @@ export default function Home() {
           <div className={tab == "rocketgraphs" ? styles.graphs : styles.none}>
             <div className={styles.acc}>
               <span className={styles.chartName}>Acceleration (m^2/s)</span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Ax", "Ay", "Az"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["Ax", "Ay", "Az"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.rot}>
               <span className={styles.chartName}>Angular Velocity (rad/s)</span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Rx", "Ry", "Rz"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["Rx", "Ry", "Rz"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.mag}>
               <span className={styles.chartName}>Magnetic Flux (µT)</span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Mx", "My", "Mz"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["Mx", "My", "Mz"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.alt}>
               <span className={styles.chartName}>Altitude (m)</span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Altitude"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["alt"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.cam}>
@@ -227,27 +188,27 @@ export default function Home() {
           <div className={tab == "cansatgraphs" ? styles.graphs : styles.none}>
             <div className={styles.acc}>
               <span className={styles.chartName}>Acceleration (m^2/s)</span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Ax", "Ay", "Az"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["Ax", "Ay", "Az"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.rot}>
               <span className={styles.chartName}>Angular Velocity (rad/s)</span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Rx", "Ry", "Rz"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["Rx", "Ry", "Rz"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.mag}>
               <span className={styles.chartName}>Altitude (m)</span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Altitude"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["alt"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.alt}>
               <span className={styles.chartName}>AQI (m)</span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Altitude"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["alt"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.cam}>
               <span className={styles.chartName}>Temperature (^C) / Humidity </span>
-              <Graph data={dummy ? dummyData : data} keysArr={["Altitude"]} />
+              <Graph data={dummy ? dummyData : data.length > 20 ? data.slice(-20): data} keysArr={["temp", "Hum"]} />
               <span className={styles.chartXLabel}>T(s)</span>
             </div>
             <div className={styles.gps} id="map">
@@ -264,11 +225,15 @@ export default function Home() {
                 --------------------<br />
               </div>
 
-              {terminal.map((message, index) => (
+              {data.map((message, index) => (
                 <li key={index}>
-                  [{message.datetime + " "}<span> - {message.type}  </span>] {message.message}
+                  {/* [{message.datetime + " "}<span> - {message.type}  </span>] {message.message} */}
+
+                  {JSON.stringify(Object.values(data[index]))}
+
                 </li>
               ))}
+                <li>  {JSON.stringify(data)} </li>
 
               <div ref={terminalEndRef} />
 

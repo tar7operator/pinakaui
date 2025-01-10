@@ -42,14 +42,14 @@ const Graph = ({ data, keysArr }) => {
   return (
     <ResponsiveContainer width="100%" height="95%">
       <AreaChart
-        width={550}
-        height={300}
+        width={400}
+        height={200}
         data={data}
         margin={{
           top: 20,
-          right: 25,
-          left: -35,
-          bottom: 5,
+          right: 10,
+          left: -20,
+          bottom: 0,
         }}
       >
         <CartesianGrid strokeDasharray="1 1" stroke="rgba(245, 245, 220, 0.25)" />
