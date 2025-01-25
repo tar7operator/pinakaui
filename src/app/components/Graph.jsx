@@ -1,8 +1,20 @@
 'use client';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { AreaChart, Area } from 'recharts';
+import styles from "../page.module.css";
+
+
 
 const Graph = ({ data, keysArr }) => {
+
+  const MinMax = (d,k) => { 
+    let max=0; let min=0;
+
+    for (let i=0; i<d.length; i++) {
+
+    }
+    return [min, max];
+  };
 
   const keyColors = {
     "t": "rgba(26, 188, 156, 1)",      // Time
@@ -20,7 +32,7 @@ const Graph = ({ data, keysArr }) => {
     "Aqi": "rgba(192, 57, 43, 1)",    // Air Quality Index
     "Temp": "rgba(255, 127, 80, 1)"   // Temperature
   };
-  
+
   const keyShades = {
     "t": "rgba(26, 188, 156, 0.2)",      // Time
     "Ax": "rgba(22, 160, 133, 0.2)",    // Acceleration X
@@ -46,16 +58,18 @@ const Graph = ({ data, keysArr }) => {
         height={200}
         data={data}
         margin={{
-          top: 20,
+          top: 30,
           right: 25,
-          left: 35,
+          left: -15,
           bottom: 5,
         }}
       >
         <CartesianGrid strokeDasharray="1 1" stroke="rgba(245, 245, 220, 0.25)" />
-        <XAxis dataKey="t" fontSize={9} />
-        <YAxis fontSize={9} />
-        <Tooltip />
+        <XAxis dataKey={"t"} fontSize={9} />
+        <YAxis fontSize={9} 
+        // domain={domain} allowDataOverflow={true}
+        />
+        <Tooltip content={<CustomTooltip keysArr={keysArr} />}/>
         {(keysArr.length >= 1) ? <Area type="monotone" dataKey={keysArr[0]} stroke={keyColors[keysArr[0]]} fill={keyShades[keysArr[0]]} /> : null}
         {(keysArr.length >= 2) ? <Area type="monotone" dataKey={keysArr[1]} stroke={keyColors[keysArr[1]]} fill={keyShades[keysArr[1]]} /> : null}
         {(keysArr.length >= 3) ? <Area type="monotone" dataKey={keysArr[2]} stroke={keyColors[keysArr[2]]} fill={keyShades[keysArr[2]]} /> : null}
@@ -66,20 +80,16 @@ const Graph = ({ data, keysArr }) => {
 
 export default Graph;
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, keysArr }) => {
   if (active && payload && payload.length) {
     return (
-      <div className={styles.tooltip}>
-        <p className="text-medium text-lg">{label}</p>
-        <p className="text-sm text-blue-400">
-          Ax:
-          <span className="ml-2">${payload[0].value}</span>
-        </p>
-        <p className="text-sm text-indigo-400">
-          Ay:
-          <span className="ml-2">${payload[1].value}</span>
-        </p>
+      <div className={styles.customTooltip}>
+        {keysArr.map((m, i) => (
+          <p className="label">{`${keysArr[i]} : ${payload[i].value}`}</p>
+        ))}
       </div>
     );
   }
+
+  return null;
 };

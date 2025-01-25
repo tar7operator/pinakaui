@@ -1,0 +1,18 @@
+.markerbox {
+    position: absolute;
+    top: '50%';
+    left: '50%';
+    transform: 'translate(-50%; -50%)';
+    z-index: 999;
+    background-color: 'white';
+    padding: '10px';
+    border-Radius: '10px';
+    width: '100px';
+    height: '100px';
+    box-shadow: '0 0 10px rgba(0;0;0;0.5)';
+  }
+  .mapbox {
+    height: 100%;
+    width: 100%;
+    border-radius: 10px;
+  }

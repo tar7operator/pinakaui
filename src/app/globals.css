@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Arame';
-  src: url('./recources/ArameMono.ttf');
+  src: url('./resources/ArameMono.ttf');
   font-weight: normal;
   font-style: normal;
 }
@@ -26,8 +26,6 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Arame';
-
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -40,7 +38,6 @@ body {
   letter-spacing: 0.8px;
   list-style: none;
   font-family: 'Arame';
-  color: rgba(250, 235, 215, 0.7);
 
 }
 
