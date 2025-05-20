@@ -2,6 +2,13 @@
   display: none;
 }
 
+.green {
+  color: rgba(13, 155, 20, 0.9);
+}
+.purple {
+  color: rgba(116, 25, 176, 0.9);
+}
+
 .container {
   height: 100vh;
   width: 100vw;
@@ -418,6 +425,7 @@ div.terminal {
     "base";
   grid-template-rows: 1fr 30px;
 }
+
 
 div.monitor {
   grid-area: monitor;

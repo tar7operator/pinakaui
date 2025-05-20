@@ -12,10 +12,10 @@ export default function Home() {
 
   const [connection, changeConnection] = useState({ status: false, message: "Telemetry not found." });
   const [baudrate, setBaudRate] = useState(115200);
+  const [com, setCom] = useState("");
+
   const [terminalData, setTerminalData] = useState([]);
-  const [rocketData, setRocketData] = useState([]);
-  const [cansatData, setCansatData] = useState([]);
-  const [latestrocketData, setLatestRocketData] = useState({
+  const [rocketData, setRocketData] = useState([{
     tid: "2024 ASI ROCKETRY 047",
     t: 0,
     pc: 0,
@@ -40,8 +40,40 @@ export default function Home() {
     My: 0,
     Mz: 0,
     dt: 0
-  });
-  const [latestCansatData, setLatestCansatData] = useState({
+  }]);
+  const [cansatData, setCansatData] = useState([{
+    tid: "2024 ASI ROCKETRY 047",
+    t: 0,
+    pc: 0,
+    alt: 0,
+    p: 0,
+    temp: 0,
+    volt: 0,
+    gt: 0,
+    Lat: 0,
+    Lon: 0,
+    galt: 0,
+    sats: 0,
+    Ax: 0,
+    Ay: 0,
+    Az: 0,
+    Rx: 0,
+    Ry: 0,
+    Rz: 0,
+    state: 0,
+    Hum: 0,
+    Mx: 0,
+    My: 0,
+    Mz: 0,
+    dt: 0
+  }]);
+
+
+  const [dummy, setDummy] = useState(false);
+  const terminalEndRef = useRef(null);
+
+  const dummyData = [
+    {
     tid: "2024-ASI ROCKETRY 047",
     t: 0,
     pc: 0,
@@ -66,25 +98,7 @@ export default function Home() {
     My: 0,
     Mz: 0,
     dt: 0
-  });
-
-  const [dummy, setDummy] = useState(false);
-  const terminalEndRef = useRef(null);
-
-  const dummyData = [
-    {
-      "t": 0,
-      "Ax": 40.00,
-      "Ay": 24.00,
-      "Az": 9.81,
-      "Rx": 40.00,
-      "Ry": 24.00,
-      "Rz": 9.81,
-      "Mx": 40.00,
-      "My": 24.00,
-      "Mz": 9.81,
-      "Altitude": 40.00
-    }
+  }
   ];
 
   useEffect(() => {
@@ -92,6 +106,16 @@ export default function Home() {
       block: "center", // Align the element in the center
     });
   }, [terminalData]);
+
+  const sendCommand = (data) => {
+    // Send command to the serial port
+
+    // Append the command to the terminal
+    setTerminalData(t => [...t, { time: new Date().toLocaleTimeString(), type: "com", src: "admin", msg: data }]);
+
+    // Clear the input field
+    setCom("");
+  }
 
   async function requestPort() {
     try {
@@ -131,7 +155,7 @@ export default function Home() {
           buffer = parts.pop();
 
           parts.forEach(part => {
-            const line = "> 2024 " + part.trim(); // Re-add "2024" to each split part
+            const line = "2024 " + part.trim(); // Re-add "2024" to each split part
             const headers = [
               "tid", "t", "pc", "alt", "p", "temp", "volt", "gt",
               "Lat", "Lon", "galt", "sats", "Ax", "Ay", "Az",
@@ -147,15 +171,14 @@ export default function Home() {
                 data[h] = val[i];
               }
             });
+
             if (line.includes("047") && line.includes(",c")) {
               setTerminalData(term => [...term, { time: new Date().toLocaleTimeString(), type: "tel", src: "cansat", msg: line }]);
               setCansatData(d => [...d, data]);
-              setLatestCansatData(data);
             }
             else if (line.includes("047") && line.includes(",r")) {
               setTerminalData(term => [...term, { time: new Date().toLocaleTimeString(), type: "tel", src: "rocket", msg: line }]);
               setRocketData(d => [...d, data]);
-              setLatestRocketData(data);
             }
             else {
             }
@@ -173,18 +196,6 @@ export default function Home() {
       }
     }
   };
-
-  async function closePort() {
-    try {
-      await port.close();
-      port = null;
-      changeConnection({ status: false, message: "Not Connected to port." });
-    }
-    catch {
-      changeConnection({ status: true, message: "UNABLE TO DISCONNECT." });
-    }
-  }
-
 
 
   //Serial data read
@@ -205,11 +216,11 @@ export default function Home() {
             </svg>}
         </div>
         <div className={styles.timeTab}><Time></Time> {" IST"}</div>
-        <div className={styles.satelliteTab} id={latestrocketData.sats > 0 ? "green" : null}>
-          {latestrocketData.sats + " SATS"}
+        <div className={styles.satelliteTab} id={rocketData[rocketData.length - 1].sats > 0 ? "green" : null}>
+          {rocketData[rocketData.length - 1].sats + " SATS"}
         </div>
-        <div className={styles.satelliteTab2} id={latestCansatData.sats > 0 ? "green" : null}>
-          {latestCansatData.sats + " SATS"}
+      <div className={styles.satelliteTab2} id={cansatData[cansatData.length - 1 ].sats > 0 ? "green" : null}>
+          {cansatData[cansatData.length - 1 ].sats + " SATS"}
         </div>
         <span>ASI ROCKETRY 2024-25 | Team Pinaka | ID: 047</span>
 
@@ -220,19 +231,21 @@ export default function Home() {
 
           <div className={styles.telemetryInput}>
             <div>BAUDRATE:</div>
-            <div><div className={styles.select}>
-              <select value={baudrate} onChange={e => setBaudRate(e.target.value)} className={styles.selectc}>
-                <option value="4800">4800 bps</option>
+            <div>
+              
+              <div className={"select"}>
+              <select value={baudrate} onChange={e => setBaudRate(e.target.value)} className={"selectc"}>
                 <option value="9600">9600 bps</option>
-                <option value="19200">19200 bps</option>
                 <option value="115200">115200 bps</option>
               </select>
-              <span className={styles.focus}></span>
-            </div></div>
+              <span className={"focus"}></span>
+            </div>
+            
+            </div>
           </div>
 
           <ul className={styles.actionsGrid} >
-            <li className={connection.status ? styles.greenAction : styles.redAction} onClick={() => connection.status ? closePort() : requestPort()} id="openPort">{!connection.status ? "START" : "STOP"}</li>
+            <li className={connection.status ? styles.greenAction : styles.redAction} onClick={() => connection.status ? null : requestPort()} id="openPort">{!connection.status ? "START" : "STOP"}</li>
             <li className={dummy ? styles.greenAction : styles.redAction} onClick={() => setDummy(!dummy)} id="openPort">DUMMY</li>
           </ul>
 
@@ -244,19 +257,19 @@ export default function Home() {
             <li onClick={() => setTab("rocketgraphs")} className={tab == "rocketgraphs" ? styles.selected : null}>
               <span>Rocket</span>
               <div className={styles.metrics}>
-                <span>Voltage: </span>{latestrocketData.volt + " V"}
+                <span>Voltage: </span>{rocketData[rocketData.length - 1].volt + " V"}
               </div>
               <div className={styles.metrics}>
-                <span>Altitude: </span>{latestrocketData.alt + "m"}
+                <span>Altitude: </span>{rocketData[rocketData.length - 1].alt + "m"}
               </div>
             </li>
             <li onClick={() => setTab("cansatgraphs")} className={tab == "cansatgraphs" ? styles.selected : null}>
               <span>CANSAT</span>
               <div className={styles.metrics}>
-                <span>Voltage: </span>{latestCansatData.volt + " V"}
+                <span>Voltage: </span>{cansatData[cansatData.length - 1 ].volt + " V"}
               </div>
               <div className={styles.metrics}>
-                <span>Altitude: </span>{latestCansatData.alt + "m"}
+                <span>Altitude: </span>{cansatData[cansatData.length - 1 ].alt + "m"}
               </div>
             </li>
             <li onClick={() => setTab("maps")} className={tab == "maps" ? styles.selected : null}>
@@ -341,7 +354,10 @@ export default function Home() {
                 --------------------<br />
               </div>
               {terminalData.map((m, i) => (
-                <li key={i}>{"[ " + m.time + " | " + m.type + " | " + m.src + "] " + m.msg}</li>
+                <li key={i}>
+                  {"[ " + m.time + " | "}
+                   <span style={{ margin: "0 8px" }} className={m.type == "tel" ? styles.green : m.type == "com" ? styles.purple : null}> {m.type} </span> 
+                  {" ] " + m.msg}</li>
               ))}
 
 
@@ -349,8 +365,8 @@ export default function Home() {
             </ul>
             <div className={styles.base}>
               <span>{">_"}</span>
-              <input className={styles.comInput} type="text"></input>
-              <button className={styles.comSendBtn}>{">>"}</button>
+              <input className={styles.comInput} value={com} onChange={(e)=>setCom(e.target.value)} type="text" onKeyDown={(e)=> e.key == "Enter" ? sendCommand(com):null}></input>
+              <button onClick={() => sendCommand(com)} className={styles.comSendBtn}>{">>"}</button>
             </div>
 
           </div>
